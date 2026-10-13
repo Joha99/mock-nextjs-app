@@ -12,6 +12,7 @@
  *   2. Call `getProducts()` from src/lib/api.ts, then `normalizeProducts()`
  *      from src/lib/normalize.ts (you can stub normalize as `return raw as any`
  *      at first and come back for Feature 2 — say so out loud if you do).
+ *
  *   3. Render a responsive grid of <ProductCard /> (src/components/products/ProductCard.tsx).
  *   4. Show "{n} products" above the grid.
  *   5. Handle the empty state ("No products found").
@@ -29,14 +30,23 @@
  * Typing: `PageProps<"/products">` is a global helper Next generates for you.
  */
 
-export default function ProductsPage(props: PageProps<"/products">) {
+import { ProductCard } from "@/components/products/ProductCard";
+import { getProducts } from "@/lib/api";
+import { normalizeProducts } from "@/lib/normalize";
+
+export default async function ProductsPage(props: PageProps<"/products">) {
   void props; // you'll use props.searchParams in Feature 3
+
+  const products = await getProducts();
+  const normalizedProducts = normalizeProducts(products.data);
 
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Products</h1>
       <p className="rounded border border-dashed border-zinc-300 bg-white p-6 text-zinc-500">
-        TODO (Feature 1): fetch products from <code>/api/products</code> and render them here.
+        {normalizedProducts.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
       </p>
     </div>
   );

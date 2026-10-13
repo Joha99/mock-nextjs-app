@@ -22,7 +22,8 @@ import type { ProductsResponse, RawProduct, RawPromoCode } from "@/lib/types";
  * works in both. In a real app this would point at another service.
  */
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000";
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000";
 
 export class ApiError extends Error {
   constructor(
@@ -43,10 +44,22 @@ export class ApiError extends Error {
  * Tip: pass `{ cache: "no-store" }` to fetch so you always see fresh data
  * while developing.
  */
-export async function getProducts(options: { page?: number; limit?: number; fail?: boolean } = {}): Promise<ProductsResponse> {
-  // TODO(Feature 1): implement
-  void options;
-  throw new Error("TODO: implement getProducts in src/lib/api.ts");
+export async function getProducts(
+  options: { page?: number; limit?: number; fail?: boolean } = {},
+): Promise<ProductsResponse> {
+  const searchParams = new URLSearchParams({
+    page: String(options.page),
+    limit: String(options.limit),
+    fail: String(options.fail),
+  });
+  const url = `${API_BASE_URL}/api/products`;
+  const response = await fetch(url, { cache: "no-store" });
+
+  if (!response.ok) {
+    throw new ApiError("Fetching products failed.", response.status);
+  }
+
+  return response.json();
 }
 
 /**

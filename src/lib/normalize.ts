@@ -1,4 +1,10 @@
-import type { Category, Product, PromoCode, RawProduct, RawPromoCode } from "@/lib/types";
+import type {
+  Category,
+  Product,
+  PromoCode,
+  RawProduct,
+  RawPromoCode,
+} from "@/lib/types";
 
 /**
  * 🛠️ FEATURE 2 — turn messy API data into clean UI data.
@@ -10,7 +16,13 @@ import type { Category, Product, PromoCode, RawProduct, RawPromoCode } from "@/l
  * the data ONCE at the boundary and the rest of the app can trust the types.
  */
 
-export const CATEGORIES: Category[] = ["electronics", "home", "outdoors", "books", "apparel"];
+export const CATEGORIES: Category[] = [
+  "electronics",
+  "home",
+  "outdoors",
+  "books",
+  "apparel",
+];
 
 /**
  * Rules for a single product:
@@ -26,9 +38,25 @@ export const CATEGORIES: Category[] = ["electronics", "home", "outdoors", "books
  *   - createdAt: ISO string -> Date
  */
 export function normalizeProduct(raw: RawProduct): Product {
-  // TODO(Feature 2): implement
-  void raw;
-  throw new Error("TODO: implement normalizeProduct in src/lib/normalize.ts");
+  const normalized: Product = {
+    id: raw.id,
+    title: raw.title,
+    category: raw.category.trim().toLowerCase() as Category,
+    description: raw.description ?? "",
+    stock: raw.stock ?? 0,
+    rating: raw.rating === undefined ? null : raw.rating,
+    reviewCount: raw.review_count ?? 0,
+    imageUrl: raw.image_url === undefined ? null : raw.image_url,
+    salePriceCents:
+      typeof raw.sale_price_cents === "number" &&
+      raw.sale_price_cents < raw.price_cents
+        ? raw.sale_price_cents
+        : null,
+    createdAt: new Date(raw.created_at),
+    priceCents: raw.price_cents,
+  };
+
+  return normalized;
 }
 
 /**
@@ -38,9 +66,11 @@ export function normalizeProduct(raw: RawProduct): Product {
  *   - keep the original order
  */
 export function normalizeProducts(raw: RawProduct[]): Product[] {
-  // TODO(Feature 2): implement
-  void raw;
-  throw new Error("TODO: implement normalizeProducts in src/lib/normalize.ts");
+  const normalized: Product[] = raw
+    .filter((product) => product.is_active)
+    .map((product) => normalizeProduct(product));
+
+  return normalized;
 }
 
 /**
