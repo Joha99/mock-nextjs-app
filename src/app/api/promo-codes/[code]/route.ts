@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { RAW_PROMO_CODES } from "@/lib/data/products";
+import { getDb } from "@/lib/data/db";
 import { simulateNetwork } from "@/app/api/_utils";
 
 /**
@@ -16,11 +16,11 @@ import { simulateNetwork } from "@/app/api/_utils";
  * you implement in src/lib/pricing.ts (Feature 6).
  */
 export async function GET(request: NextRequest, ctx: RouteContext<"/api/promo-codes/[code]">) {
-  const failure = await simulateNetwork(request.nextUrl.searchParams);
+  const failure = await simulateNetwork(request);
   if (failure) return failure;
 
   const { code } = await ctx.params;
-  const promo = RAW_PROMO_CODES.find((p) => p.code.toLowerCase() === code.trim().toLowerCase());
+  const promo = getDb().promoCodes.find((p) => p.code.toLowerCase() === code.trim().toLowerCase());
   if (!promo) {
     return Response.json({ error: "Promo code not found" }, { status: 404 });
   }

@@ -130,6 +130,7 @@ src/
 │   ├── api/                  ✅ mock backend: don't need to touch
 │   ├── products/             🛠️ Features 1, 3, 4
 │   ├── cart/                 🛠️ Features 5, 6, 7
+│   ├── admin/                🛠️ Feature 12 (Server Action + cache invalidation)
 │   └── debug/                🐛 Feature 8
 ├── components/
 │   ├── products/             🛠️ ProductCard, ProductFilters, AddToCartButton
@@ -137,11 +138,14 @@ src/
 │   └── debug/                🐛 InventoryReport (has 4 planted bugs)
 └── lib/
     ├── types.ts              ✅ RawProduct (API shape) vs Product (UI shape)
-    ├── data/products.ts      ✅ the "database"
+    ├── data/                 ✅ the "database" (seed data + in-memory store)
     ├── format.ts             ✅ formatCents, formatDate
     ├── api.ts                🛠️ fetch helpers
     ├── normalize.ts          🛠️ raw → clean data
     ├── pricing.ts            🛠️ cart math
+    ├── cache.ts              🛠️ TTL/LRU cache + memoizeAsync (Feature 10)
+    ├── catalog.ts            🛠️ "use cache" data functions (Feature 11)
+    ├── store.ts / cartStore.ts 🛠️ external store + persistence (Feature 15)
     └── __tests__/            ✅ tests that describe the expected behavior
 ```
 
@@ -152,8 +156,14 @@ src/
 | `GET /api/products?page=1&limit=50` | `{ data: RawProduct[], page, limit, total, totalPages }` |
 | `GET /api/products/:id` | `RawProduct`, or `404` / `400` |
 | `GET /api/promo-codes/:code` | `RawPromoCode`, or `404` |
+| `PATCH /api/products/:id` | admin update: `{ price_cents?, sale_price_cents?, stock? }` (Part 2) |
+| `GET /api/products/:id/stock` | `{ id, stock, checked_at }`, fast and fresh (Part 2) |
+| `GET /api/favorites` · `PUT`/`DELETE /api/favorites/:id` | `{ ids: number[] }` (Part 2) |
+| `POST /api/orders` | 🛠️ you design it (Feature 13) |
 
-Every endpoint has ~600ms of fake latency and accepts:
+Every request is logged in the `npm run dev` terminal (`[api #12] GET /api/products`), which is how you'll see caching work in Part 2. Data lives in memory: edits persist until you restart the dev server.
+
+Every endpoint has fake latency (~600ms by default) and accepts:
 - `?fail=true`: respond with a `500` so you can test error UI
 - `?delay=2000`: change the latency so you can see loading states better
 

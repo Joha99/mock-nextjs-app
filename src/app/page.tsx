@@ -16,6 +16,13 @@ const FEATURES = [
   { n: 7, title: "Promo codes", where: "src/components/cart/PromoCodeForm.tsx", href: "/cart" },
   { n: 8, title: "Debug lab (find 4 planted bugs)", where: "src/components/debug/InventoryReport.tsx", href: "/debug" },
   { n: 9, title: "Stretch goals", where: "FEATURES.md", href: null },
+  { n: 10, title: "Build an in-memory TTL/LRU cache", where: "src/lib/cache.ts", href: null },
+  { n: 11, title: "Server caching with \"use cache\"", where: "src/lib/catalog.ts", href: "/products" },
+  { n: 12, title: "Invalidate the cache (Server Action)", where: "src/app/admin/actions.ts", href: "/admin" },
+  { n: 13, title: "Design the checkout API", where: "src/app/api/orders/route.ts", href: null },
+  { n: 14, title: "Optimistic favorites", where: "src/components/products/FavoriteButton.tsx", href: "/products" },
+  { n: 15, title: "External store, persistence, cross-tab sync", where: "src/lib/store.ts", href: "/cart" },
+  { n: 16, title: "Where should this state live? (discussion)", where: "FEATURES.md", href: null },
 ];
 
 export default function Home() {

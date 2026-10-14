@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { RAW_PRODUCTS } from "@/lib/data/products";
+import { getDb } from "@/lib/data/db";
 import type { ProductsResponse } from "@/lib/types";
 import { simulateNetwork } from "@/app/api/_utils";
 
@@ -25,17 +25,18 @@ import { simulateNetwork } from "@/app/api/_utils";
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
 
-  const failure = await simulateNetwork(params);
+  const failure = await simulateNetwork(request);
   if (failure) return failure;
 
+  const products = getDb().products;
   const limit = clamp(Number(params.get("limit") ?? 50), 1, 50);
-  const total = RAW_PRODUCTS.length;
+  const total = products.length;
   const totalPages = Math.ceil(total / limit);
   const page = clamp(Number(params.get("page") ?? 1), 1, totalPages);
   const start = (page - 1) * limit;
 
   const body: ProductsResponse = {
-    data: RAW_PRODUCTS.slice(start, start + limit),
+    data: products.slice(start, start + limit),
     page,
     limit,
     total,

@@ -90,3 +90,47 @@ export async function getPromoCode(code: string): Promise<RawPromoCode> {
   void code;
   throw new Error("TODO: implement getPromoCode in src/lib/api.ts");
 }
+
+// ─────────────────────────── Part 2 endpoints ───────────────────────────
+// Same rules as above: check res.ok, throw ApiError with the status.
+// Once you have 3+ copies of that check, consider extracting a small
+// `request<T>(path, init)` helper and say why out loud.
+
+export type StockResponse = { id: number; stock: number; checked_at: string };
+
+/** GET /api/products/:id/stock (Feature 11). Never cache this one. */
+export async function getProductStock(id: number | string): Promise<StockResponse> {
+  // TODO(Feature 11): implement
+  void id;
+  throw new Error("TODO: implement getProductStock in src/lib/api.ts");
+}
+
+export type ProductUpdate = { price_cents?: number; sale_price_cents?: number | null; stock?: number };
+
+/**
+ * PATCH /api/products/:id (Feature 12).
+ * Send JSON: method "PATCH", header "Content-Type: application/json",
+ * body JSON.stringify(update). On a 400 the body has { error, fieldErrors? }.
+ * Consider putting fieldErrors on the thrown error so the form can show them
+ * next to the right input.
+ */
+export async function updateProduct(id: number, update: ProductUpdate): Promise<RawProduct> {
+  // TODO(Feature 12): implement
+  void id;
+  void update;
+  throw new Error("TODO: implement updateProduct in src/lib/api.ts");
+}
+
+/** GET /api/favorites -> { ids } (Feature 14). Per-user data: never cache. */
+export async function getFavorites(): Promise<number[]> {
+  // TODO(Feature 14): implement
+  throw new Error("TODO: implement getFavorites in src/lib/api.ts");
+}
+
+/** PUT /api/favorites/:id (favorite: true) or DELETE /api/favorites/:id (favorite: false). Returns the new ids. */
+export async function setFavorite(productId: number, favorite: boolean): Promise<number[]> {
+  // TODO(Feature 14): implement
+  void productId;
+  void favorite;
+  throw new Error("TODO: implement setFavorite in src/lib/api.ts");
+}

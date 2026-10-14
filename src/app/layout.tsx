@@ -41,6 +41,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Link href="/debug" className="text-sm text-zinc-600 hover:text-zinc-900">
                 Debug lab
               </Link>
+              <Link href="/admin" className="text-sm text-zinc-600 hover:text-zinc-900">
+                Admin
+              </Link>
               <div className="ml-auto">
                 <CartLink />
               </div>
