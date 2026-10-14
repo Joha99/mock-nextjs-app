@@ -1,4 +1,7 @@
-"use client"; // Error boundaries must be Client Components
+"use client";
+import { useEffect } from "react";
+
+// Error boundaries must be Client Components
 
 /**
  * 🛠️ FEATURE 1 — error UI for /products.
@@ -17,8 +20,21 @@
  * Note: in production, errors thrown in Server Components arrive here with a
  * generic message (to avoid leaking secrets) plus an `error.digest` id.
  */
-export default function ProductsError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
-  void error;
-  void retry;
-  return <p className="text-red-600">TODO (Feature 1): something went wrong.</p>;
+export default function ProductsError({
+  error,
+  retry,
+}: {
+  error: Error & { digest?: string };
+  retry: () => void;
+}) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
+  return (
+    <div>
+      <p className="text-red-600">There was an issue loading products.</p>
+      <button onClick={() => retry()}>Try again</button>
+    </div>
+  );
 }

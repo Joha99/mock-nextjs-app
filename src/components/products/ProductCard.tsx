@@ -1,5 +1,25 @@
 import Link from "next/link";
 import type { Product } from "@/lib/types";
+import { formatCents } from "@/lib/format";
+
+type BadgeProps = {
+  text: string;
+  variant: "warning" | "success" | "info";
+};
+
+const VARIANT_TO_BG: Record<BadgeProps["variant"], string> = {
+  warning: "bg-red-200",
+  info: "bg-gray-100",
+  success: "bg-green-200",
+} as const;
+
+const Badge = ({ text, variant }: BadgeProps) => {
+  return (
+    <span className={`rounded-xl px-2 h-fit text-xs ${VARIANT_TO_BG[variant]}`}>
+      {text}
+    </span>
+  );
+};
 
 /**
  * 🛠️ FEATURE 1 — one product tile in the grid.
@@ -19,10 +39,38 @@ import type { Product } from "@/lib/types";
  * (no full page reload) + automatic prefetching.
  */
 export function ProductCard({ product }: { product: Product }) {
+  const { salePriceCents, priceCents, reviewCount, rating, stock, category } =
+    product;
+
+  const isOnSale = salePriceCents !== null;
+  const isOutOfStock = stock === 0;
+
+  const displayedPrice = formatCents(salePriceCents ?? priceCents);
+  const displayedRating =
+    rating === null
+      ? "No reviews yet"
+      : `★ ${rating.toFixed(1)} (${reviewCount})`;
+
   return (
-    <Link href={`/products/${product.id}`} className="block rounded-lg border border-zinc-200 bg-white p-4">
-      {/* TODO (Feature 1): flesh this out */}
-      {product.title}
+    <Link
+      href={`/products/${product.id}`}
+      className={`block rounded-lg border border-zinc-200 bg-white p-4 ${isOutOfStock ? "opacity-50" : ""}`}
+    >
+      <div className="flex gap-1">
+        <span className="grow">{product.title}</span>
+        <Badge text={category} variant="info" />
+        {isOnSale && <Badge text="sale" variant="success" />}
+        {isOutOfStock && <Badge text="out of stock" variant="warning" />}
+      </div>
+      <div className="flex justify-between">
+        <div className="flex gap-1">
+          {isOnSale && (
+            <span className="line-through">{formatCents(priceCents)}</span>
+          )}
+          <span>{displayedPrice}</span>
+        </div>
+        <span>{displayedRating}</span>
+      </div>
     </Link>
   );
 }

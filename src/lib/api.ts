@@ -47,12 +47,20 @@ export class ApiError extends Error {
 export async function getProducts(
   options: { page?: number; limit?: number; fail?: boolean } = {},
 ): Promise<ProductsResponse> {
-  const searchParams = new URLSearchParams({
-    page: String(options.page),
-    limit: String(options.limit),
-    fail: String(options.fail),
-  });
-  const url = `${API_BASE_URL}/api/products`;
+  const { page, limit, fail } = options;
+
+  const searchParams = new URLSearchParams();
+  if (page !== undefined) {
+    searchParams.append("page", String(page));
+  }
+  if (limit !== undefined) {
+    searchParams.append("limit", String(limit));
+  }
+  if (fail !== undefined) {
+    searchParams.append("fail", String(fail));
+  }
+
+  const url = `${API_BASE_URL}/api/products?${searchParams.toString()}`;
   const response = await fetch(url, { cache: "no-store" });
 
   if (!response.ok) {
