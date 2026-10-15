@@ -1,7 +1,6 @@
 "use client";
 
 import { CATEGORIES } from "@/lib/normalize";
-import { Category, Sort } from "@/lib/types";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { PropsWithChildren, useEffect, useState } from "react";
 
