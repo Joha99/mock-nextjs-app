@@ -56,7 +56,12 @@ export type RawPromoCode = {
 
 // ---------- What the UI works with ----------
 
-export type Category = "electronics" | "home" | "outdoors" | "books" | "apparel";
+export type Category =
+  | "electronics"
+  | "home"
+  | "outdoors"
+  | "books"
+  | "apparel";
 
 export type Product = {
   id: number;

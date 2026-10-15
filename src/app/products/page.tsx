@@ -34,10 +34,18 @@ import { getProducts } from "@/lib/api";
 import { normalizeProducts } from "@/lib/normalize";
 
 import styles from "./page.module.css";
+import { ProductFilters } from "@/components/products/ProductFilters";
 
 export default async function ProductsPage(props: PageProps<"/products">) {
+  // contains q (search input), category, sort, inStock
+  const searchParams = await props.searchParams;
+  const params = await props.params;
+
+  console.log("search params", searchParams);
+
   const products = await getProducts();
   const normalizedProducts = normalizeProducts(products.data);
+  // TODO: filter & sort the products
 
   if (normalizedProducts.length === 0) {
     return (
@@ -51,6 +59,7 @@ export default async function ProductsPage(props: PageProps<"/products">) {
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Products</h1>
       <p>{normalizedProducts.length} products</p>
+      <ProductFilters />
       <div className={styles.grid}>
         {normalizedProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
