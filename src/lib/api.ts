@@ -76,9 +76,14 @@ export async function getProducts(
  * page can call Next's `notFound()`.
  */
 export async function getProduct(id: number | string): Promise<RawProduct> {
-  // TODO(Feature 4): implement
-  void id;
-  throw new Error("TODO: implement getProduct in src/lib/api.ts");
+  const url = `${API_BASE_URL}/api/products/${id}`;
+  const res = await fetch(url);
+
+  if (!res.ok) {
+    throw new ApiError(`GET /products/${id} failed`, res.status);
+  }
+
+  return res.json();
 }
 
 /**
@@ -99,13 +104,19 @@ export async function getPromoCode(code: string): Promise<RawPromoCode> {
 export type StockResponse = { id: number; stock: number; checked_at: string };
 
 /** GET /api/products/:id/stock (Feature 11). Never cache this one. */
-export async function getProductStock(id: number | string): Promise<StockResponse> {
+export async function getProductStock(
+  id: number | string,
+): Promise<StockResponse> {
   // TODO(Feature 11): implement
   void id;
   throw new Error("TODO: implement getProductStock in src/lib/api.ts");
 }
 
-export type ProductUpdate = { price_cents?: number; sale_price_cents?: number | null; stock?: number };
+export type ProductUpdate = {
+  price_cents?: number;
+  sale_price_cents?: number | null;
+  stock?: number;
+};
 
 /**
  * PATCH /api/products/:id (Feature 12).
@@ -114,7 +125,10 @@ export type ProductUpdate = { price_cents?: number; sale_price_cents?: number | 
  * Consider putting fieldErrors on the thrown error so the form can show them
  * next to the right input.
  */
-export async function updateProduct(id: number, update: ProductUpdate): Promise<RawProduct> {
+export async function updateProduct(
+  id: number,
+  update: ProductUpdate,
+): Promise<RawProduct> {
   // TODO(Feature 12): implement
   void id;
   void update;
@@ -128,7 +142,10 @@ export async function getFavorites(): Promise<number[]> {
 }
 
 /** PUT /api/favorites/:id (favorite: true) or DELETE /api/favorites/:id (favorite: false). Returns the new ids. */
-export async function setFavorite(productId: number, favorite: boolean): Promise<number[]> {
+export async function setFavorite(
+  productId: number,
+  favorite: boolean,
+): Promise<number[]> {
   // TODO(Feature 14): implement
   void productId;
   void favorite;
