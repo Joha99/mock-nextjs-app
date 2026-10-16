@@ -35,38 +35,52 @@ import { normalizeProducts } from "@/lib/normalize";
 
 import styles from "./page.module.css";
 import { ProductFilters } from "@/components/products/ProductFilters";
-import { filterProducts } from "@/lib/filterProducts";
+import { filterProducts, sortProducts } from "@/lib/filterProducts";
+import { Filters } from "@/lib/types";
 
 export default async function ProductsPage(props: PageProps<"/products">) {
-  // contains q (search input), category, sort, inStock
   const searchParams = await props.searchParams;
-  const params = await props.params;
 
-  console.log("search params", searchParams);
+  const filters: Filters = {
+    q:
+      searchParams.q && typeof searchParams.q === "string"
+        ? searchParams.q
+        : undefined,
+    category:
+      searchParams.category && typeof searchParams.category === "string"
+        ? searchParams.category
+        : undefined,
+    sort:
+      searchParams.sort && typeof searchParams.sort === "string"
+        ? searchParams.sort
+        : undefined,
+    inStock:
+      searchParams.inStock && typeof searchParams.inStock === "string"
+        ? searchParams.inStock
+        : undefined,
+  };
 
   const products = await getProducts();
   const normalized = normalizeProducts(products.data);
-  const filtered = filterProducts(normalized, searchParams);
-  // TODO: filter & sort the normalizedProducts
-
-  if (filtered.length === 0) {
-    return (
-      <div className="space-y-4">
-        <h1 className="text-2xl font-semibold">No products found</h1>
-      </div>
-    );
-  }
+  const filtered = filterProducts(normalized, filters);
+  const sorted = sortProducts(filtered, filters);
 
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Products</h1>
-      <p>{filtered.length} products</p>
+      <p>
+        {sorted.length} {sorted.length <= 1 ? "product" : "products"}
+      </p>
       <ProductFilters />
-      <div className={styles.grid}>
-        {filtered.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
+      {sorted.length === 0 ? (
+        <h2>No products found.</h2>
+      ) : (
+        <div className={styles.grid}>
+          {sorted.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

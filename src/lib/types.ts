@@ -56,6 +56,13 @@ export type RawPromoCode = {
 
 // ---------- What the UI works with ----------
 
+export type Filters = {
+  q?: string;
+  category?: string;
+  sort?: string;
+  inStock?: string;
+};
+
 export type Category =
   | "electronics"
   | "home"
