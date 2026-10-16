@@ -21,35 +21,12 @@ import { PropsWithChildren, useEffect, useState } from "react";
  * This component only updates the URL. The page (a Server Component) reads
  * searchParams and does the actual filtering. Put that filtering/sorting in a
  * pure function (e.g. src/lib/filterProducts.ts) and test it.
- *
- * Hooks you'll need (from "next/navigation"):
- *   const router = useRouter();
- *   const pathname = usePathname();
- *   const searchParams = useSearchParams();
- *
- * Updating one param while keeping the others:
- *   const params = new URLSearchParams(searchParams);
- *   value ? params.set(key, value) : params.delete(key);
- *   router.replace(`${pathname}?${params.toString()}`);
- *
- * Details that interviewers notice:
- *   - Debounce the search input (~300ms) so you don't navigate on every key.
- *   - Use router.replace (not push) for typing, so Back doesn't step through
- *     every keystroke.
- *   - Initialize the inputs FROM the URL so a refreshed page shows the
- *     current filters.
- *   - A "Clear filters" button when any filter is active.
- *   - Bonus: useTransition() to show a subtle pending state while the server
- *     re-renders the list.
- *
- * Gotcha: a component that calls useSearchParams() must be inside a
- * <Suspense> boundary, or the build fails with a "missing Suspense boundary"
- * error. products/loading.tsx already provides one for the whole page, but
- * know that the error exists.
  */
 
 type QueryParam = "q" | "category" | "sort" | "inStock";
 type Sort = "featured" | "price-asc" | "price-desc" | "rating" | "newest";
+
+const INPUT_DEBOUNCE_MS = 300;
 
 const InputGroup = ({ children }: PropsWithChildren) => {
   return (
@@ -72,6 +49,7 @@ export function ProductFilters() {
   const defaultCategory = searchParams.get("category") ?? "";
   const defaultSort = searchParams.get("sort") ?? "featured";
   const defaultInStock = searchParams.get("inStock") === "1";
+
   const defaultSearchInput = searchParams.get("q") ?? "";
   const [searchInput, setSearchInput] = useState<string>(defaultSearchInput);
 
@@ -89,7 +67,7 @@ export function ProductFilters() {
     const timeoutId = setTimeout(() => {
       if (searchInput === (searchParams.get("q") ?? "")) return;
       updateQueryParams("q", searchInput);
-    }, 1000);
+    }, INPUT_DEBOUNCE_MS);
 
     return () => {
       if (timeoutId) {
