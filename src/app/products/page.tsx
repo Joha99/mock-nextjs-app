@@ -69,7 +69,7 @@ export default async function ProductsPage(props: PageProps<"/products">) {
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Products</h1>
       <p>
-        {sorted.length} {sorted.length <= 1 ? "product" : "products"}
+        {sorted.length} {sorted.length === 1 ? "product" : "products"}
       </p>
       <ProductFilters />
       {sorted.length === 0 ? (

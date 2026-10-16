@@ -12,7 +12,7 @@ export const filterProducts = (
       continue;
     }
 
-    if (inStock !== undefined && product.stock === 0) {
+    if (inStock === "1" && product.stock === 0) {
       continue;
     }
 
