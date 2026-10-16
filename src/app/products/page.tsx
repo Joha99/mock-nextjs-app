@@ -38,26 +38,19 @@ import { ProductFilters } from "@/components/products/ProductFilters";
 import { filterProducts, sortProducts } from "@/lib/filterProducts";
 import { Filters } from "@/lib/types";
 
+// A URL param can be missing, a string, or an array (?q=a&q=b). Keep only a
+// single non-empty string so the filters below get clean values.
+const firstString = (value: string | string[] | undefined) =>
+  typeof value === "string" && value !== "" ? value : undefined;
+
 export default async function ProductsPage(props: PageProps<"/products">) {
   const searchParams = await props.searchParams;
 
   const filters: Filters = {
-    q:
-      searchParams.q && typeof searchParams.q === "string"
-        ? searchParams.q
-        : undefined,
-    category:
-      searchParams.category && typeof searchParams.category === "string"
-        ? searchParams.category
-        : undefined,
-    sort:
-      searchParams.sort && typeof searchParams.sort === "string"
-        ? searchParams.sort
-        : undefined,
-    inStock:
-      searchParams.inStock && typeof searchParams.inStock === "string"
-        ? searchParams.inStock
-        : undefined,
+    q: firstString(searchParams.q),
+    category: firstString(searchParams.category),
+    sort: firstString(searchParams.sort),
+    inStock: firstString(searchParams.inStock),
   };
 
   const products = await getProducts();
@@ -73,7 +66,7 @@ export default async function ProductsPage(props: PageProps<"/products">) {
       </p>
       <ProductFilters />
       {sorted.length === 0 ? (
-        <h2>No products found.</h2>
+        <p>No products match your filters.</p>
       ) : (
         <div className={styles.grid}>
           {sorted.map((product) => (
