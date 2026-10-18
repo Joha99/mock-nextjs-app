@@ -1,4 +1,6 @@
 import type { CartItem, CartTotals, Product, PromoCode } from "@/lib/types";
+import { K } from "vitest/dist/chunks/reporters.d.BuRON0I0.js";
+import { formatCents } from "./format";
 
 /**
  * 🛠️ FEATURE 6 — cart pricing business logic.
@@ -53,25 +55,73 @@ export const TAX_RATE = 0.0825;
 
 /** Rule 1 */
 export function getUnitPriceCents(product: Product): number {
-  // TODO(Feature 6): implement
-  void product;
-  throw new Error("TODO: implement getUnitPriceCents");
+  return product.salePriceCents ?? product.priceCents;
 }
 
 /** Rules 1–3 */
 export function getSubtotalCents(items: CartItem[]): number {
-  // TODO(Feature 6): implement
-  void items;
-  throw new Error("TODO: implement getSubtotalCents");
+  return items.reduce((prev, curr) => {
+    const quantity = clampQuantity(curr.quantity, curr.product);
+    const unitPriceCents = getUnitPriceCents(curr.product);
+    const lineTotal = quantity * unitPriceCents;
+
+    prev += lineTotal;
+    return prev;
+  }, 0);
 }
 
 /** Rules 1–7. `promo` is null when the user hasn't entered a code. */
-export function calculateCartTotals(items: CartItem[], promo: PromoCode | null, now: Date = new Date()): CartTotals {
-  // TODO(Feature 6): implement
-  void items;
-  void promo;
-  void now;
-  throw new Error("TODO: implement calculateCartTotals");
+export function calculateCartTotals(
+  items: CartItem[],
+  promo: PromoCode | null,
+  now: Date = new Date(),
+): CartTotals {
+  const subtotalCents = getSubtotalCents(items);
+  let discountCents = 0;
+  let promoError = null;
+
+  if (promo) {
+    if (promo.expiresAt && promo.expiresAt <= now) {
+      promoError = "This code has expired";
+    } else if (subtotalCents < promo.minSubtotalCents) {
+      promoError = `Spend ${formatCents(promo.minSubtotalCents - subtotalCents)} more to use this code`;
+    } else {
+      let eligibleAmount = subtotalCents;
+
+      if (promo.category) {
+        const itemsInCategory = items.filter(
+          (item) => item.product.category === promo.category,
+        );
+        if (itemsInCategory.length === 0) {
+          promoError = `This code only applies to ${promo.category} items`;
+        }
+        eligibleAmount = getSubtotalCents(itemsInCategory);
+      }
+
+      if (promo.type === "percent") {
+        discountCents = Math.round((eligibleAmount * promo.value) / 100);
+      } else {
+        discountCents = Math.min(promo.value, eligibleAmount);
+      }
+    }
+  }
+
+  const priceAfterDiscounts = subtotalCents - discountCents;
+  const shippingCents =
+    items.length === 0 || priceAfterDiscounts >= FREE_SHIPPING_THRESHOLD_CENTS
+      ? 0
+      : FLAT_SHIPPING_CENTS;
+  const taxCents = Math.round((subtotalCents - discountCents) * TAX_RATE);
+  const totalCents = subtotalCents - discountCents + shippingCents + taxCents;
+
+  return {
+    subtotalCents,
+    discountCents,
+    shippingCents,
+    taxCents,
+    totalCents,
+    promoError,
+  };
 }
 
 /**
@@ -80,8 +130,5 @@ export function calculateCartTotals(items: CartItem[], promo: PromoCode | null, 
  * 0 means "remove from cart".
  */
 export function clampQuantity(requested: number, product: Product): number {
-  // TODO(Feature 5): implement
-  void requested;
-  void product;
-  throw new Error("TODO: implement clampQuantity");
+  return Math.min(Math.floor(Math.max(0, requested)), product.stock);
 }
