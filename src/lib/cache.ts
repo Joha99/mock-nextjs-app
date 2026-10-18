@@ -189,23 +189,24 @@ export function memoizeAsync<A extends unknown[], R>(
     const cacheValue = ttlCache.get(computedKey);
     const inProgressValue = inProgressCache.get(computedKey);
 
-    if (cacheValue) {
+    if (cacheValue !== undefined) {
       return Promise.resolve(cacheValue);
     }
 
-    if (inProgressValue) {
+    if (inProgressValue !== undefined) {
       return inProgressValue;
     }
 
     const newPromise = fn(...args)
       .then((value) => {
-        inProgressCache.delete(computedKey);
         ttlCache.set(computedKey, value);
         return value;
       })
       .catch((err) => {
-        inProgressCache.delete(computedKey);
         throw err;
+      })
+      .finally(() => {
+        inProgressCache.delete(computedKey);
       });
     inProgressCache.set(computedKey, newPromise);
     return newPromise;
