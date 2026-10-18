@@ -62,42 +62,107 @@
 export type Clock = () => number;
 
 export class TtlCache<K, V> {
-  constructor(private options: { ttlMs: number; maxSize?: number; now?: Clock }) {}
+  private store = new Map<K, { value: V; expiresAt: number }>();
+  private clock = Date.now;
+
+  constructor(
+    private options: { ttlMs: number; maxSize?: number; now?: Clock },
+  ) {}
+
+  private removeExpired(): number {
+    const expired: K[] = [];
+    const currentTime = this.getCurrentTime();
+
+    this.store.forEach((value, key) => {
+      if (value.expiresAt <= currentTime) {
+        expired.push(key);
+      }
+    });
+
+    for (const id of expired) {
+      this.store.delete(id);
+    }
+
+    return this.store.size;
+  }
+
+  private isExpired(key: K): boolean {
+    const storeValue = this.store.get(key);
+    const currentTime = this.options.now ? this.options.now() : this.clock();
+
+    return storeValue !== undefined && storeValue.expiresAt <= currentTime;
+  }
+
+  private getCurrentTime(): number {
+    return this.options.now ? this.options.now() : this.clock();
+  }
 
   get(key: K): V | undefined {
-    // TODO(Feature 10)
-    void key;
-    throw new Error("TODO: implement TtlCache.get");
+    const storeValue = this.store.get(key);
+    const isExpired = this.isExpired(key);
+
+    if (!storeValue) {
+      return undefined;
+    }
+
+    if (isExpired) {
+      this.store.delete(key);
+      return undefined;
+    }
+
+    // Add the store value again so that it's considered as more recently "used"
+    this.store.delete(key);
+    this.store.set(key, storeValue);
+
+    return storeValue.value;
   }
 
   set(key: K, value: V, ttlMs?: number): void {
-    // TODO(Feature 10)
-    void key;
-    void value;
-    void ttlMs;
-    throw new Error("TODO: implement TtlCache.set");
+    const currentTime = this.getCurrentTime();
+    const expiresAt =
+      currentTime + (ttlMs !== undefined ? ttlMs : this.options.ttlMs);
+    const upToDateSize = this.removeExpired();
+
+    if (this.store.has(key)) {
+      this.store.delete(key);
+      this.store.set(key, { value, expiresAt });
+      return;
+    }
+
+    if (this.options.maxSize && upToDateSize >= this.options.maxSize) {
+      this.store.delete(this.store.keys().next().value!);
+    }
+
+    this.store.set(key, { value, expiresAt });
   }
 
   has(key: K): boolean {
-    // TODO(Feature 10)
-    void key;
-    throw new Error("TODO: implement TtlCache.has");
+    const isExpired = this.isExpired(key);
+
+    if (isExpired) {
+      this.store.delete(key);
+      return false;
+    }
+
+    return this.store.has(key);
   }
 
   delete(key: K): boolean {
-    // TODO(Feature 10)
-    void key;
-    throw new Error("TODO: implement TtlCache.delete");
+    if (this.store.has(key)) {
+      const isExpired = this.isExpired(key);
+      this.store.delete(key);
+      return !isExpired;
+    }
+
+    return false;
   }
 
   clear(): void {
-    // TODO(Feature 10)
-    throw new Error("TODO: implement TtlCache.clear");
+    this.store.clear();
   }
 
   get size(): number {
-    // TODO(Feature 10)
-    throw new Error("TODO: implement TtlCache.size");
+    return this.removeExpired();
   }
 }
 
@@ -105,8 +170,46 @@ export function memoizeAsync<A extends unknown[], R>(
   fn: (...args: A) => Promise<R>,
   options: { ttlMs: number; key?: (...args: A) => string; now?: Clock },
 ): (...args: A) => Promise<R> {
-  // TODO(Feature 10, Part 3)
-  void fn;
-  void options;
-  throw new Error("TODO: implement memoizeAsync");
+  const ttlCache = new TtlCache<string, R>({
+    ttlMs: options.ttlMs,
+    now: options.now,
+  });
+
+  const inProgressCache: Map<string, Promise<R>> = new Map();
+
+  const getKey = (...args: A) => {
+    if (options.key) {
+      return options.key(...args);
+    }
+    return JSON.stringify(args);
+  };
+
+  const memoized = (...args: A): Promise<R> => {
+    const computedKey = getKey(...args);
+    const cacheValue = ttlCache.get(computedKey);
+    const inProgressValue = inProgressCache.get(computedKey);
+
+    if (cacheValue) {
+      return Promise.resolve(cacheValue);
+    }
+
+    if (inProgressValue) {
+      return inProgressValue;
+    }
+
+    const newPromise = fn(...args)
+      .then((value) => {
+        inProgressCache.delete(computedKey);
+        ttlCache.set(computedKey, value);
+        return value;
+      })
+      .catch((err) => {
+        inProgressCache.delete(computedKey);
+        throw err;
+      });
+    inProgressCache.set(computedKey, newPromise);
+    return newPromise;
+  };
+
+  return memoized;
 }
