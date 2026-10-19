@@ -1,3 +1,4 @@
+import { formatCents } from "@/lib/format";
 import type { CartTotals } from "@/lib/types";
 
 /**
@@ -14,7 +15,34 @@ import type { CartTotals } from "@/lib/types";
  * of the client bundle anyway because it's imported by a Client Component
  * (the cart page). That's fine.
  */
+
+const LabelValuePair = ({ label, value }: { label: string; value: string }) => {
+  return (
+    <div className="flex gap-1">
+      <span>{label}:</span>
+      <span>{value}</span>
+    </div>
+  );
+};
+
 export function CartSummary({ totals }: { totals: CartTotals }) {
-  void totals;
-  return <div className="text-zinc-500">TODO (Feature 6): order summary</div>;
+  const subTotal = formatCents(totals.subtotalCents);
+  const discount =
+    totals.discountCents > 0 ? formatCents(totals.discountCents) : undefined;
+  const shipping =
+    totals.shippingCents === 0 ? "Free" : formatCents(totals.shippingCents);
+  const tax = formatCents(totals.taxCents);
+  const total = formatCents(totals.totalCents);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <LabelValuePair label="Subtotal" value={subTotal} />
+      {discount && <LabelValuePair label="Discount" value={`-${discount}`} />}
+      <LabelValuePair label="Shipping" value={shipping} />
+      <LabelValuePair label="Tax" value={tax} />
+      <div className="border-gray-400 border-bs-1 border-solid py-1 font-bold">
+        <LabelValuePair label="Total" value={total} />
+      </div>
+    </div>
+  );
 }

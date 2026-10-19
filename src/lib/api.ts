@@ -91,9 +91,16 @@ export async function getProduct(id: number | string): Promise<RawProduct> {
  * Remember to `encodeURIComponent(code)` — users type anything into inputs.
  */
 export async function getPromoCode(code: string): Promise<RawPromoCode> {
-  // TODO(Feature 7): implement
-  void code;
-  throw new Error("TODO: implement getPromoCode in src/lib/api.ts");
+  const encoded = encodeURIComponent(code);
+
+  const url = `${API_BASE_URL}/api/promo-codes/${encoded}`;
+  const res = await fetch(url);
+
+  if (!res.ok) {
+    throw new ApiError(`GET /api/promo-codes/${encoded} failed`, res.status);
+  }
+
+  return res.json();
 }
 
 // ─────────────────────────── Part 2 endpoints ───────────────────────────

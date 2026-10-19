@@ -29,15 +29,16 @@ import Link from "next/link";
  */
 
 import styles from "./page.module.css";
-import { type Product } from "@/lib/types";
+import { PromoCode, type Product } from "@/lib/types";
 import { calculateCartTotals, getUnitPriceCents } from "@/lib/pricing";
 import { formatCents } from "@/lib/format";
+import { PromoCodeForm } from "@/components/cart/PromoCodeForm";
+import { CartSummary } from "@/components/cart/CartSummary";
 
 export default function CartPage() {
-  const { items, itemCount, promo, updateQuantity } = useCart();
-  const totalPrice = formatCents(
-    calculateCartTotals(items, promo).subtotalCents,
-  );
+  const { items, itemCount, promo, updateQuantity, setPromo } = useCart();
+
+  const cartTotals = calculateCartTotals(items, promo);
 
   if (items.length === 0) {
     return (
@@ -53,6 +54,10 @@ export default function CartPage() {
 
   const onChangeQuantity = (productId: Product["id"], newQuantity: number) => {
     updateQuantity(productId, newQuantity);
+  };
+
+  const onPromoApply = (promo: PromoCode | null) => {
+    setPromo(promo);
   };
 
   return (
@@ -77,7 +82,7 @@ export default function CartPage() {
                   onChangeQuantity(product.id, cartItem.quantity - 1);
                 }}
               >
-                ➖
+                -
               </button>
               <div className={styles.quantity}>{cartItem.quantity}</div>
               <button
@@ -87,15 +92,23 @@ export default function CartPage() {
                   onChangeQuantity(product.id, cartItem.quantity + 1);
                 }}
               >
-                ➕
+                +
               </button>
             </div>
           </div>
         );
       })}
-      <div>
-        <p>Subtotal: {totalPrice}</p>
+
+      <div className="flex justify-between items-center">
+        <PromoCodeForm appliedPromo={promo} onApply={onPromoApply} />
+        {cartTotals.promoError && (
+          <p aria-live="polite" className="text-xs text-red-600">
+            {cartTotals.promoError}
+          </p>
+        )}
       </div>
+
+      <CartSummary totals={cartTotals} />
     </div>
   );
 }

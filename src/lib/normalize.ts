@@ -81,7 +81,20 @@ export function normalizeProducts(raw: RawProduct[]): Product[] {
  *   - expires_at missing/null -> null, otherwise a Date
  */
 export function normalizePromoCode(raw: RawPromoCode): PromoCode {
-  // TODO(Feature 7): implement
-  void raw;
-  throw new Error("TODO: implement normalizePromoCode in src/lib/normalize.ts");
+  const code = raw.code.toUpperCase();
+  const expiresAt =
+    raw.expires_at == undefined ? null : new Date(raw.expires_at);
+  const category =
+    raw.category == undefined
+      ? null
+      : (raw.category.trim().toLowerCase() as Category);
+
+  return {
+    code,
+    type: raw.type,
+    value: raw.value,
+    minSubtotalCents: raw.min_subtotal_cents ?? 0,
+    category,
+    expiresAt,
+  };
 }
