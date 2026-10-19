@@ -1,5 +1,8 @@
 "use client";
 
+import { useCart } from "@/components/cart/CartProvider";
+import Link from "next/link";
+
 /**
  * 🛠️ FEATURES 5, 6, 7 — the cart page, at URL "/cart".
  *
@@ -24,13 +27,75 @@
  *       navigation).
  *     - Show totals.promoError next to the form when the code doesn't apply.
  */
+
+import styles from "./page.module.css";
+import { type Product } from "@/lib/types";
+import { calculateCartTotals, getUnitPriceCents } from "@/lib/pricing";
+import { formatCents } from "@/lib/format";
+
 export default function CartPage() {
+  const { items, itemCount, promo, updateQuantity } = useCart();
+  const totalPrice = formatCents(
+    calculateCartTotals(items, promo).subtotalCents,
+  );
+
+  if (items.length === 0) {
+    return (
+      <div>
+        <h1 className="text-2xl font-semibold">Cart</h1>
+        <Link href="/products" className="text-blue-500">
+          ← Go to products
+        </Link>
+        <p>Your cart is empty.</p>
+      </div>
+    );
+  }
+
+  const onChangeQuantity = (productId: Product["id"], newQuantity: number) => {
+    updateQuantity(productId, newQuantity);
+  };
+
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Cart</h1>
-      <p className="rounded border border-dashed border-zinc-300 bg-white p-6 text-zinc-500">
-        TODO (Features 5–7): render cart items, totals and a promo code form.
-      </p>
+      <h1 className="text-2xl font-semibold">Cart ({itemCount})</h1>
+      {items.map((cartItem) => {
+        const product = cartItem.product;
+        const unitPrice = formatCents(getUnitPriceCents(product));
+
+        return (
+          <div
+            key={product.id}
+            className="border border-solid border-gray-400 rounded-md p-3 flex justify-between items-center"
+          >
+            <div>
+              {product.title} ({unitPrice})
+            </div>
+            <div className={styles.controls}>
+              <button
+                className={styles.decrement}
+                onClick={() => {
+                  onChangeQuantity(product.id, cartItem.quantity - 1);
+                }}
+              >
+                ➖
+              </button>
+              <div className={styles.quantity}>{cartItem.quantity}</div>
+              <button
+                disabled={cartItem.quantity >= product.stock}
+                className={styles.increment}
+                onClick={() => {
+                  onChangeQuantity(product.id, cartItem.quantity + 1);
+                }}
+              >
+                ➕
+              </button>
+            </div>
+          </div>
+        );
+      })}
+      <div>
+        <p>Subtotal: {totalPrice}</p>
+      </div>
     </div>
   );
 }

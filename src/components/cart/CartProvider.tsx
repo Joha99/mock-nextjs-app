@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useReducer, type ReactNode } from "react";
 import type { CartItem, Product, PromoCode } from "@/lib/types";
+import { clampQuantity } from "@/lib/pricing";
 
 /**
  * 🛠️ FEATURE 5 — global cart state with React Context.
@@ -47,21 +48,148 @@ type CartContextValue = {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-const notImplemented = () => {
-  throw new Error("TODO (Feature 5): implement CartProvider");
+type Action =
+  | {
+      type: "ADD_ITEM";
+      payload: {
+        product: Product;
+        quantity: number;
+      };
+    }
+  | { type: "REMOVE_ITEM"; payload: { productId: Product["id"] } }
+  | { type: "CLEAR_CART" }
+  | { type: "SET_PROMO"; payload: { promo: PromoCode | null } }
+  | {
+      type: "UPDATE_QUANTITY";
+      payload: { productId: number; quantity: number };
+    };
+
+type Store = {
+  items: Map<Product["id"], CartItem>;
+  promo: PromoCode | null;
+};
+
+const reducer = (state: Store, action: Action) => {
+  switch (action.type) {
+    case "UPDATE_QUANTITY": {
+      const cartItem = state.items.get(action.payload.productId);
+
+      if (!cartItem) return state;
+
+      const product = cartItem.product;
+      const clampedQuantity = clampQuantity(action.payload.quantity, product);
+      const newItems = new Map([...state.items]);
+
+      if (clampedQuantity === 0) {
+        newItems.delete(product.id);
+      } else {
+        newItems.set(product.id, {
+          ...cartItem,
+          quantity: clampedQuantity,
+        });
+      }
+
+      return {
+        ...state,
+        items: newItems,
+      };
+    }
+    case "SET_PROMO": {
+      return {
+        ...state,
+        promo: action.payload.promo,
+      };
+    }
+    case "ADD_ITEM": {
+      const product = action.payload.product;
+      const requested = action.payload.quantity;
+
+      if (product.stock === 0) return state;
+
+      const cartItem = state.items.get(product.id) ?? { product, quantity: 0 };
+      const clampedQuantity = clampQuantity(
+        cartItem.quantity + requested,
+        product,
+      );
+      const newItems = new Map([...state.items]);
+
+      newItems.set(product.id, {
+        ...cartItem,
+        quantity: clampedQuantity,
+      });
+
+      return {
+        ...state,
+        items: newItems,
+      };
+    }
+    case "REMOVE_ITEM": {
+      const productId = action.payload.productId;
+      const cartItem = state.items.get(productId);
+
+      if (!cartItem) return state;
+
+      const newItems = new Map([...state.items]);
+      newItems.delete(productId);
+
+      return {
+        ...state,
+        items: newItems,
+      };
+    }
+    case "CLEAR_CART": {
+      return {
+        ...state,
+        items: new Map<Product["id"], CartItem>(),
+      };
+    }
+    default: {
+      return state;
+    }
+  }
 };
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  // TODO(Feature 5): replace this placeholder value with real state.
-  const value: CartContextValue = {
-    items: [],
-    itemCount: 0,
+  const [state, dispatch] = useReducer(reducer, {
+    items: new Map<Product["id"], CartItem>(),
     promo: null,
-    addItem: notImplemented,
-    updateQuantity: notImplemented,
-    removeItem: notImplemented,
-    clear: notImplemented,
-    setPromo: notImplemented,
+  });
+
+  const cartItemsList = [...state.items.values()];
+  const itemCount = cartItemsList.reduce((prev, curr) => {
+    prev += curr.quantity;
+    return prev;
+  }, 0);
+
+  const addItem = (product: Product, quantity: number = 1) => {
+    dispatch({ type: "ADD_ITEM", payload: { product, quantity } });
+  };
+
+  const removeItem = (productId: Product["id"]) => {
+    dispatch({ type: "REMOVE_ITEM", payload: { productId } });
+  };
+
+  const clear = () => {
+    dispatch({ type: "CLEAR_CART" });
+  };
+
+  const updateQuantity = (productId: number, quantity: number) => {
+    dispatch({ type: "UPDATE_QUANTITY", payload: { productId, quantity } });
+  };
+
+  const setPromo = (promo: PromoCode | null) => {
+    dispatch({ type: "SET_PROMO", payload: { promo } });
+  };
+
+  const value: CartContextValue = {
+    items: cartItemsList,
+    promo: state.promo,
+    itemCount,
+    addItem,
+    removeItem,
+    clear,
+    updateQuantity,
+    setPromo,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

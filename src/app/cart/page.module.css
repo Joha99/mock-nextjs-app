@@ -1,0 +1,40 @@
+.item {
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  padding: 6px;
+}
+
+.button {
+  width: 30px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e3e1e1;
+}
+
+.decrement {
+  composes: button;
+  border-right: 1px solid #ccc;
+}
+
+.increment {
+  composes: button;
+  border-left: 1px solid #ccc;
+}
+
+.quantity {
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.controls {
+  border: 1px solid #ccc;
+  display: flex;
+  align-items: stretch;
+  border-radius: 5px;
+  overflow: hidden;
+  height: 32px;
+}
